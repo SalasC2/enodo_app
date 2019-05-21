@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Simple Map</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
     <style>
@@ -12,7 +13,7 @@
       }
       /* Optional: Makes the sample page fill the window. */
       html, body {
-        height: 100%;
+        height: 90%;
         margin: 0;
         padding: 0;
       }
@@ -22,14 +23,128 @@
     <div id="map"></div>
     <script>
       var map;
+      var heatmap1 = []
+      var heatmap2 = []
+      var heatmap3 = []
+
+      var yellow = [
+        'rgba(255, 255, 0, 0)',
+        'rgba(255, 255, 0, 1)'
+       ]
+
+      var red = [
+        'rgba(255, 0, 0, 0)',
+        'rgba(255, 0, 0, 1)'
+      ]
+
+      var green = [
+        'rgba(0, 255, 0, 0)',
+        'rgba(0, 255, 0, 1)'
+      ]
+
       function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: -34.397, lng: 150.644},
+          center: {lat: 41.885, lng: -87.665},
           zoom: 8
         });
+        json_data = []
+        $.ajax({
+            url: "/api/geojson",
+            cache: false,   
+            dataType: "json",  
+            success: function( data, textStatus, jqXHR ) {
+                json_data.push(data)
+                $.each(data, function(key, item) {
+                    // console.log(item.address, "Address")
+                    var latLng = new google.maps.LatLng(item.lon, item.lat); 
+                    if (item.estimated_market_value >= 2000000) {heatmap1.push(latLng)}
+                    else if (item.estimated_market_value >= 1000000) {heatmap2.push(latLng)}
+                    else if (item.estimated_market_value < 1000000) {heatmap3.push(latLng)}
+                    // Creating a marker and putting it on the map
+                    var marker = new google.maps.Marker({
+                    position: latLng,
+                    map: map,
+                    title: item.address
+                    });
+                });
+
+                var gradient1 = new google.maps.visualization.HeatmapLayer({
+                    data: heatmap1,
+                    map:map,
+                    radius: 24
+                });
+                var gradient2 = new google.maps.visualization.HeatmapLayer({
+                    data: heatmap2,
+                    map:map,
+                    radius: 24
+
+                });
+                var gradient3 = new google.maps.visualization.HeatmapLayer({
+                    data: heatmap3,
+                    map:map,
+                    radius: 24
+                });
+                gradient1.set('gradient', gradient1.get('gradient') ? null : green);
+                gradient2.set('gradient', gradient2.get('gradient') ? null : yellow);
+                gradient3.set('gradient', gradient3.get('gradient') ? null : red);
+            }
+        });
+
+      }
+
+
+      function filterMarkers(category) { 
+          switch(category) {
+              case "Two Stories":
+                  $.each(json_data[0], function(key, item) {
+                    marker = item["apt_type"];
+                    // If is same category or category not picked
+                    if (marker == "Two Story") {
+                        marker.setVisible(true);
+                    }
+                    // Categories don't match 
+                    else {
+                        marker.setVisible(false);
+                    }
+                  })
+              break;
+              case "Three Stories":
+                  $.each(json_data[0], function(key, item) {
+                    marker = item["apt_type"];
+                    if (marker == "Three Story") {
+                        marker.setVisible(true);
+                    }
+                    // Categories don't match 
+                    else {
+                        marker.setVisible(false);
+                    }
+                  })
+                break;
+            default:
+                $.each(json_data[0], function(key, item) {
+                    marker = item;
+                    marker.setVisible(true);
+                })
+          }
+        // filter by residence type i.e. what type of house it is
+        // filter by multi family homes
+        // filter by res_type how many floors
+        // filter by bath 1, 2, 3+ 
+        // filter by half bath
+        // filter by fireplace 0 is no 1 is yes
+        // filter by garage attached / detached with count
+        // filter by age of house
+        
       }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}&callback=initMap"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}&libraries=visualization&callback=initMap"
     async defer></script>
+    <div class="investCast">
+        <select id="mag" onchange="filterMarkers(this.value);">
+            <option value="">Apt Floors</option>
+            <option value="Two Stories=<">Two Floors</option>
+            <option value="Three Stories">Three Floors</option>
+        </select>        
+    </div>
   </body>
 </html>
