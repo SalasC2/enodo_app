@@ -97,7 +97,7 @@ def geoJson():
                 "current_building": sh1.row(rx)[9].value,
                 "current_total": sh1.row(rx)[10].value,  
                 "estimated_market_value": sh1.row(rx)[11].value,
-                "priot_land": sh1.row(rx)[12].value, # Gain or decrease in market value?
+                "prior_land": sh1.row(rx)[12].value, # Gain or decrease in market value?
                 "prior_building": sh1.row(rx)[13].value, # Gain or decrease in market value?
                 "prior_total": sh1.row(rx)[14].value, 
                 "prior_land": sh1.row(rx)[15].value, # Gain or decrease in market value?
@@ -115,7 +115,7 @@ def geoJson():
                 "suffix": sh1.row(rx)[27].value,
                 "apt_type": sh1.row(rx)[28].value, # (Under Construction/1bdr/2brd/etc)  
                 "city": sh1.row(rx)[29].value, # ALL CHICAGO, worth putting in data? 
-                "resident_type": sh1.row(rx)[30].value,
+                "resident_type": sh1.row(rx)[30].value.strip(),
                 "building_use": sh1.row(rx)[31].value,
                 "apt_description": sh1.row(rx)[32].value,
                 "comm_units": sh1.row(rx)[33].value,

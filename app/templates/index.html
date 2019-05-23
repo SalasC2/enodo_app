@@ -6,12 +6,9 @@
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
     <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
       #map {
         height: 100%;
       }
-      /* Optional: Makes the sample page fill the window. */
       html, body {
         height: 90%;
         margin: 0;
@@ -26,6 +23,7 @@
       var heatmap1 = []
       var heatmap2 = []
       var heatmap3 = []
+      var secondmarker = []
 
       var yellow = [
         'rgba(255, 255, 0, 0)',
@@ -55,19 +53,82 @@
             success: function( data, textStatus, jqXHR ) {
                 json_data.push(data)
                 $.each(data, function(key, item) {
-                    // console.log(item.address, "Address")
+                    var infowindow = new google.maps.InfoWindow({
+                      content: item.address
+                    });
                     var latLng = new google.maps.LatLng(item.lon, item.lat); 
-                    if (item.estimated_market_value >= 2000000) {heatmap1.push(latLng)}
-                    else if (item.estimated_market_value >= 1000000) {heatmap2.push(latLng)}
-                    else if (item.estimated_market_value < 1000000) {heatmap3.push(latLng)}
+                    // Get lat lon based on values for Burndown grid
+                    if (item.estimated_market_value >= 2000000) { heatmap1.push(latLng) }
+                    else if (item.estimated_market_value >= 1000000) { heatmap2.push(latLng) }
+                    else if (item.estimated_market_value < 1000000) { heatmap3.push(latLng) }
                     // Creating a marker and putting it on the map
+                    // Each marker has a specific attr that allows me to filter by them
                     var marker = new google.maps.Marker({
                     position: latLng,
-                    map: map,
-                    title: item.address
+                    map: map, 
+                    apt_type: item.apt_type,
+                    address: item.address, 
+                    zip_code: item.zip_code,
+                    rec_type: item.rec_type,
+                    ovacls: item.ovacls, 
+                    current_land: item.current_land, 
+                    estimated_market_value: item.estimated_market_value, 
+                    prior_land: item.prior_land, 
+                    prior_building: item.prior_building, 
+                    prior_total: item.prior_total,
+                    town: item.town,
+                    volume: item.volume, 
+                    location: item.location, 
+                    neighbordhood: item.neighbordhood, 
+                    house_number: item.house_number, 
+                    direction: item.direction, 
+                    street: item.street, 
+                    suffix: item.suffix, 
+                    city: item.city, 
+                    resident_type: item.resident_type, 
+                    building_use: item.building_use, 
+                    apt_description: item.apt_description, 
+                    comm_units: item.comm_units, 
+                    ext_desc: item.ext_desc, 
+                    bsmt_desc: item.bsmt_desc, 
+                    attic_desc: item.attic_desc, 
+                    bldg_sqre_ft: item.bldg_sqre_ft, 
+                    land_sqre_ft: item.land_sqre_ft, 
+                    bldg_sf: item.bldg_sf,
+                    full_bath: item.full_bath, 
+                    half_bath: item.half_bath, 
+                    multi_sale: item.multi_sale,
+                    ac: item.ac, 
+                    fireplace: item.fireplace, 
+                    garage_description: item.garage_description, 
+                    age: item.age, 
+                    units_total: item.units_total,
+                    sale_date: item.sale_date, 
+                    sale_amount: item.sale_amount, 
+                    deed_type: item.deed_type, 
+                    tax_code: item.tax_code, 
+                    class_description: item.class_description, 
+                    pin: item.pin,
+                    appcnt: item.appcnt, 
+                    appeal_a: item.appeal_a, 
+                    appeal_a_status: item.appeal_a_status, 
+                    appeal_a_result: item.appeal_a_resultm,
+                    appeal_a_reason: item.appeal_a_reason, 
+                    appeal_a_pin_result: item.appeal_a_pin_result,
+                    appeal_a_propav: item.appeal_a_propav, 
+                    appeal_a_currav: item.appeal_a_currav, 
+                    appeal_a_tesltdate: item.appeal_a_tesltdate
                     });
+                    secondmarker.push(marker)
+                    // Add popup to display address of point 
+                    marker.addListener('click', function() {
+                      infowindow.open(map, marker);
+                    });
+                    google.maps.event.addListener(marker, 'mouseout', function(){
+                      infowindow.close();
+                    });                    
                 });
-
+                // Create gradient colors based on lat lons
                 var gradient1 = new google.maps.visualization.HeatmapLayer({
                     data: heatmap1,
                     map:map,
@@ -92,39 +153,36 @@
 
       }
 
-
-      function filterMarkers(category) { 
+      function filterAptMarkers(category) { 
           switch(category) {
-              case "Two Stories":
-                  $.each(json_data[0], function(key, item) {
-                    marker = item["apt_type"];
-                    // If is same category or category not picked
-                    if (marker == "Two Story") {
-                        marker.setVisible(true);
-                    }
-                    // Categories don't match 
-                    else {
-                        marker.setVisible(false);
-                    }
-                  })
+              case "Two_Stories":
+                for(var i=0; i < secondmarker.length; i++){
+                  marker = secondmarker[i]
+                  
+                  if (marker.resident_type == "Two Story") {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+                }
               break;
-              case "Three Stories":
-                  $.each(json_data[0], function(key, item) {
-                    marker = item["apt_type"];
-                    if (marker == "Three Story") {
-                        marker.setVisible(true);
-                    }
-                    // Categories don't match 
-                    else {
-                        marker.setVisible(false);
-                    }
-                  })
+              case "Three_Stories":
+                for(var i=0; i < secondmarker.length; i++){
+                  marker = secondmarker[i]
+                  if (marker.resident_type == "Three Story") {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+                }
                 break;
             default:
-                $.each(json_data[0], function(key, item) {
-                    marker = item;
-                    marker.setVisible(true);
-                })
+              for(var i=0; i<secondmarker.length; i++){
+                  marker = secondmarker[i]
+                  marker.setVisible(true);
+                }
           }
         // filter by residence type i.e. what type of house it is
         // filter by multi family homes
@@ -142,8 +200,8 @@
     <div class="investCast">
         <select id="mag" onchange="filterMarkers(this.value);">
             <option value="">Apt Floors</option>
-            <option value="Two Stories=<">Two Floors</option>
-            <option value="Three Stories">Three Floors</option>
+            <option value="Two_Stories">Two Floors</option> 
+            <option value="Three_Stories">Three Floors</option>
         </select>        
     </div>
   </body>
