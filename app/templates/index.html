@@ -19,6 +19,47 @@
   <body>
     <div id="map"></div>
     <script>
+      // //TODO: Needs work to create a dropdown helper function, to prevent repetitive code
+      // function dropDownHelper(category, opt_values, values, obj_property) {
+      //   for(var el=0; el < allMarkers.length; el++){
+      //     for (var i = 0; i < opt_values.length; i++ ) {
+      //       switch(category) {
+      //             case opt_values[i]:
+      //                 marker = allMarkers[el]
+      //                 for (j = 0; j < values.length; j++) {
+      //                   if (marker[obj_property] == values[j]) {
+      //                     marker.setVisible(true)
+      //                     break
+      //                   }
+      //                   else {
+      //                     marker.setVisible(false)
+      //                     break
+      //                   }
+      //                 }        
+      //             break;
+      //           default:
+      //             for(var i=0; i<allMarkers.length; i++){
+      //                 marker = allMarkers[i]
+      //                 marker.setVisible(true);
+      //               }
+      //         }
+      //     }
+      //   }
+      // }
+      // // How each function would look like after implemented 
+      // function hasFireplace(category) { 
+      //   opt_values = ["has_fireplace", "no_fireplace"]
+      //   values = [1, 0]
+      //   dropDownHelper(category, opt_values, values, "fireplace")
+      // }
+
+      // function filterAptMarkers(category) { 
+      //   opt_values = ["Two_Stories", "Three_Stories"]
+      //   values = ["Two Story", "Three Story"]
+      //   dropDownHelper(category, opt_values, values, "resident_type")
+      // }
+
+
       var map;
       var heatmap1 = []
       var heatmap2 = []
@@ -168,54 +209,29 @@
                 return arr[i]
               }
             }
-            
-            if (arr[i][property].split(',')[0].toUpperCase() == value.toUpperCase()) {
-              return arr[i];
-          }
+            try {
+              if (typeof(arr[i].property) == 'string') { 
+                if (arr[i][property].toUpperCase() == value.toUpperCase()) { 
+                  return arr[i]
+                }
+              } else { 
+                if (arr[i][property] == value) { 
+                  return arr[i]
+              }
+            }
+            } catch(error) { 
+              if (typeof(arr[i].property) == 'string') { 
+                if (arr[i][property].toUpperCase() == value.toUpperCase()) { 
+                  return arr[i]
+                }
+              } else { 
+                if (arr[i][property] == value) { 
+                  return arr[i]
+              }
+            }
         }
       }
-
-      // Needs work to create a dropdown helper function, to prevent repetitive code
-      // function dropDownHelper(category, opt_values, values, obj_property) {
-      //   for(var el=0; el < allMarkers.length; el++){
-      //     for (var i = 0; i < opt_values.length; i++ ) {
-      //       switch(category) {
-      //             case opt_values[i]:
-      //                 marker = allMarkers[el]
-      //                 for (j = 0; j < values.length; j++) {
-      //                   if (marker[obj_property] == values[j]) {
-      //                     marker.setVisible(true)
-      //                     break
-      //                   }
-      //                   else {
-      //                     marker.setVisible(false)
-      //                     break
-      //                   }
-      //                 }        
-      //             break;
-      //           default:
-      //             for(var i=0; i<allMarkers.length; i++){
-      //                 marker = allMarkers[i]
-      //                 marker.setVisible(true);
-      //               }
-      //         }
-      //     }
-      //   }
-      // }
-      
-      // function hasFireplace(category) { 
-      //   opt_values = ["has_fireplace", "no_fireplace"]
-      //   values = [1, 0]
-      //   dropDownHelper(category, opt_values, values, "fireplace")
-      // }
-
-      // function filterAptMarkers(category) { 
-      //   opt_values = ["Two_Stories", "Three_Stories"]
-      //   values = ["Two Story", "Three Story"]
-      //   dropDownHelper(category, opt_values, values, "resident_type")
-      // }
-
-
+    }
       function filterAddress() { 
         var searchBox = new google.maps.places.SearchBox(document.getElementById("addressSearch"))
         google.maps.event.addListener(searchBox, "places_changed", function(){ 
@@ -225,6 +241,22 @@
             marker = search(allMarkers, places[i].name, "address")
             bounds.extend(marker.position)
             latLng = [places[i].geometry.location.lng(), places[i].geometry.location.lat()]
+            marker.setPosition(marker.position)
+          }
+          map.fitBounds(bounds)
+          map.setZoom(15)
+        })
+      }
+
+
+      function filterZipCode() { 
+        var searchBox = new google.maps.places.SearchBox(document.getElementById("zipCodeSearch"))
+        google.maps.event.addListener(searchBox, "places_changed", function(){ 
+          var places = searchBox.getPlaces()
+          var bounds = new google.maps.LatLngBounds()
+          for (var i=0; i < places.length; i++) {
+            marker = search(allMarkers, places[i].name.slice(-5), "zip_code")
+            bounds.extend(marker.position)
             marker.setPosition(marker.position)
           }
           map.fitBounds(bounds)
@@ -270,40 +302,153 @@
       }
 
       function hasFireplace(fp) {
-        switch(fp) {
-          case "has_fireplace":
-            for(var i=0; i < allMarkers.length; i++) {
-              marker = allMarkers[i]
-              if (marker.fireplace == 1) {
-                marker.setVisible(true)
-              }
-              else {
-                marker.setVisible(false)
-              }
-              }              
-          case "no_fireplace":
-            for(var i=0; i < allMarkers.length; i++) {
+          switch(fp) {
+            case "has_fireplace":
+              for(var i=0; i < allMarkers.length; i++) {
                 marker = allMarkers[i]
-                if (marker.fireplace == 0) {
+                if (marker.fireplace == 1) {
                   marker.setVisible(true)
                 }
                 else {
                   marker.setVisible(false)
                 }
-            }
-            break;
-          default:
-            for(var i=0; i<allMarkers.length; i++){
+                }              
+            case "no_fireplace":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.fireplace == 0) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+            default:
+              for(var i=0; i<allMarkers.length; i++){
+                  marker = allMarkers[i]
+                  marker.setVisible(true);
+              }
+          }
+       } 
+
+
+
+       function fullBathroom(fb) {
+          switch(fb) {
+            case "3+_fb":
+              for(var i=0; i < allMarkers.length; i++) {
                 marker = allMarkers[i]
-                marker.setVisible(true);
-            }
-        }
-      }
+                if (marker.full_bath >= 3) {
+                  marker.setVisible(true)
+                }
+                else {
+                  marker.setVisible(false)
+                }
+                }              
+            case "2_fb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.full_bath == 2) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+              case "1_fb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.full_bath == 1) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+              case "0_fb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.full_bath == 0) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+            default:
+              for(var i=0; i<allMarkers.length; i++){
+                  marker = allMarkers[i]
+                  marker.setVisible(true);
+              }
+          }
+       }
+       
+       function halfBathroom(hb) {
+        switch(hb) {
+            case "3+_hb":
+              for(var i=0; i < allMarkers.length; i++) {
+                marker = allMarkers[i]
+                if (marker.half_bath >= 3) {
+                  marker.setVisible(true)
+                }
+                else {
+                  marker.setVisible(false)
+                }
+                }              
+            case "2_hb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.half_bath == 2) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+              case "1_hb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.half_bath == 1) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+              case "0_hb":
+              for(var i=0; i < allMarkers.length; i++) {
+                  marker = allMarkers[i]
+                  if (marker.half_bath == 0) {
+                    marker.setVisible(true)
+                  }
+                  else {
+                    marker.setVisible(false)
+                  }
+              }
+              break;
+            default:
+              for(var i=0; i<allMarkers.length; i++){
+                  marker = allMarkers[i]
+                  marker.setVisible(true);
+              }
+          }
+       } 
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}&libraries=visualization,places&callback=initMap"
     async defer></script>
     <div class="investCast">
-        <input type="text" id="addressSearch" onclick="filterAddress()">
+  
+        <input type="text" id="addressSearch" placeholder="Search By Address"  onclick="filterAddress()">
+
+
+        <input type="text" id="zipCodeSearch" placeholder="Search By Zip Code"   onclick="filterZipCode()">
+        
         <select id="mag" onchange="filterAptMarkers(this.value);">
             <option value="">Apt Floors</option>
             <option value="Two_Stories">Two Floors</option> 
@@ -313,7 +458,21 @@
             <option value="">Fireplaces in Apt</option>
             <option value="has_fireplace">Has a Fireplace</option> 
             <option value="no_fireplace">No Fireplace</option>
-        </select>         
+        </select>
+        <select id="mag" onchange="fullBathroom(this.value);">
+            <option value="">Full Bathrooms in Apt</option>
+            <option value="3+_fb">3+</option> 
+            <option value="2_fb">2</option>
+            <option value="1_fb">1</option> 
+            <option value="0_fb">0</option>
+        </select>   
+        <select id="mag" onchange="halfBathroom(this.value);">
+            <option value="">Half Bathrooms in Apt</option>
+            <option value="3+_hb">3+</option> 
+            <option value="2_hb">2</option>
+            <option value="1_hb">1</option> 
+            <option value="0_hb">0</option>
+        </select>            
     </div>
   </body>
 </html>
