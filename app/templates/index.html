@@ -159,10 +159,7 @@
       }
 
       function search(arr, value, property){
-          map = new google.maps.Map(document.getElementById('map'), {
-            center: {lat: 41.885, lng: -87.665},
-            zoom: 8
-          });
+          initMap()
           for (var i=0; i < arr.length; i++) {
             // TODO: In beta, lat lon (value) not matching up with existing excel sheet lat lon (Parsing Issue?)
             if (property == "position") { 
@@ -180,16 +177,16 @@
 
       // TODO: Able to filter addresses now, now just need to add actual marker (pin) and be able to show all markers as well so when you zoom out everything still displays
       function filterAddress() { 
-        var places;
         var searchBox = new google.maps.places.SearchBox(document.getElementById("mapsearch"))
         google.maps.event.addListener(searchBox, "places_changed", function(){ 
           var places = searchBox.getPlaces()
           var bounds = new google.maps.LatLngBounds()
           for (var i=0; i < places.length; i++) {
-            bounds.extend(places[i].geometry.location)
-            latLng = [places[i].geometry.location.lng(), places[i].geometry.location.lat()]
             marker = search(allMarkers, places[i].name, "address")
-            marker.setPosition(places[i].geometry.location)
+            bounds.extend(marker.position)
+            latLng = [places[i].geometry.location.lng(), places[i].geometry.location.lat()]
+            marker.setPosition(marker.position)
+            
           }
           map.fitBounds(bounds)
           map.setZoom(15)
