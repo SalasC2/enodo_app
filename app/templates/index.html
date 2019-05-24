@@ -23,7 +23,8 @@
       var heatmap1 = []
       var heatmap2 = []
       var heatmap3 = []
-      var secondmarker = []
+      var gradients = []
+      var allMarkers = []
 
       var yellow = [
         'rgba(255, 255, 0, 0)',
@@ -119,7 +120,7 @@
                     appeal_a_currav: item.appeal_a_currav, 
                     appeal_a_tesltdate: item.appeal_a_tesltdate
                     });
-                    secondmarker.push(marker)
+                    allMarkers.push(marker)
                     // Add popup to display address of point 
                     marker.addListener('click', function() {
                       infowindow.open(map, marker);
@@ -145,6 +146,10 @@
                     map:map,
                     radius: 24
                 });
+                gradients.push(gradient1)
+                gradients.push(gradient2)
+                gradients.push(gradient3)
+
                 gradient1.set('gradient', gradient1.get('gradient') ? null : green);
                 gradient2.set('gradient', gradient2.get('gradient') ? null : yellow);
                 gradient3.set('gradient', gradient3.get('gradient') ? null : red);
@@ -153,12 +158,56 @@
 
       }
 
-      function filterAptMarkers(category) { 
+      function search(arr, value, property){
+          map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 41.885, lng: -87.665},
+            zoom: 8
+          });
+          for (var i=0; i < arr.length; i++) {
+            // TODO: In beta, lat lon (value) not matching up with existing excel sheet lat lon (Parsing Issue?)
+            if (property == "position") { 
+              latLng = [arr[i][property].lng(), arr[i][property].lat()] 
+              if (latLng.join() == value) {
+                return arr[i]
+              }
+            }
+            
+            if (arr[i][property].split(',')[0].toUpperCase() == value.toUpperCase()) {
+              return arr[i];
+          }
+        }
+      }
+
+      // TODO: Able to filter addresses now, now just need to add actual marker (pin) and be able to show all markers as well so when you zoom out everything still displays
+      function filterAddress() { 
+        var places;
+        var searchBox = new google.maps.places.SearchBox(document.getElementById("mapsearch"))
+        google.maps.event.addListener(searchBox, "places_changed", function(){ 
+          var places = searchBox.getPlaces()
+          var bounds = new google.maps.LatLngBounds()
+          for (var i=0; i < places.length; i++) {
+            bounds.extend(places[i].geometry.location)
+            latLng = [places[i].geometry.location.lng(), places[i].geometry.location.lat()]
+            marker = search(allMarkers, places[i].name, "address")
+            marker.setPosition(places[i].geometry.location)
+          }
+          map.fitBounds(bounds)
+          map.setZoom(15)
+        })
+
+        
+        
+      }
+
+      function add_remove_gradient() {
+        // TODO: Will come back to figure out how to remove gradients and add them back depending on cateogory
+      }
+
+      function filterAptMarkers(category) {
           switch(category) {
               case "Two_Stories":
-                for(var i=0; i < secondmarker.length; i++){
-                  marker = secondmarker[i]
-                  
+                for(var i=0; i < allMarkers.length; i++){
+                  marker = allMarkers[i]
                   if (marker.resident_type == "Two Story") {
                     marker.setVisible(true)
                   }
@@ -168,8 +217,8 @@
                 }
               break;
               case "Three_Stories":
-                for(var i=0; i < secondmarker.length; i++){
-                  marker = secondmarker[i]
+                for(var i=0; i < allMarkers.length; i++){
+                  marker = allMarkers[i]
                   if (marker.resident_type == "Three Story") {
                     marker.setVisible(true)
                   }
@@ -179,26 +228,18 @@
                 }
                 break;
             default:
-              for(var i=0; i<secondmarker.length; i++){
-                  marker = secondmarker[i]
+              for(var i=0; i<allMarkers.length; i++){
+                  marker = allMarkers[i]
                   marker.setVisible(true);
                 }
           }
-        // filter by residence type i.e. what type of house it is
-        // filter by multi family homes
-        // filter by res_type how many floors
-        // filter by bath 1, 2, 3+ 
-        // filter by half bath
-        // filter by fireplace 0 is no 1 is yes
-        // filter by garage attached / detached with count
-        // filter by age of house
-        
       }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}&libraries=visualization&callback=initMap"
+    <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}&libraries=visualization,places&callback=initMap"
     async defer></script>
     <div class="investCast">
-        <select id="mag" onchange="filterMarkers(this.value);">
+        <input type="text" id="mapsearch" onclick="filterAddress()">
+        <select id="mag" onchange="filterAptMarkers(this.value);">
             <option value="">Apt Floors</option>
             <option value="Two_Stories">Two Floors</option> 
             <option value="Three_Stories">Three Floors</option>
